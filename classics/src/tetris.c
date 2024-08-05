@@ -193,110 +193,112 @@ void InitGame(void)
 // Update game (one frame)
 void UpdateGame(void)
 {
-    if (!gameOver)
-    {
-        if (IsKeyPressed('P')) pause = !pause;
-
-        if (!pause)
-        {
-            if (!lineToDelete)
-            {
-                if (!pieceActive)
-                {
-                    // Get another piece
-                    pieceActive = Createpiece();
-
-                    // We leave a little time before starting the fast falling down
-                    fastFallMovementCounter = 0;
-                }
-                else    // Piece falling
-                {
-                    // Counters update
-                    fastFallMovementCounter++;
-                    gravityMovementCounter++;
-                    lateralMovementCounter++;
-                    turnMovementCounter++;
-
-                    // We make sure to move if we've pressed the key this frame
-                    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) lateralMovementCounter = LATERAL_SPEED;
-                    if (IsKeyPressed(KEY_UP)) turnMovementCounter = TURNING_SPEED;
-
-                    // Fall down
-                    if (IsKeyDown(KEY_DOWN) && (fastFallMovementCounter >= FAST_FALL_AWAIT_COUNTER))
-                    {
-                        // We make sure the piece is going to fall this frame
-                        gravityMovementCounter += gravitySpeed;
-                    }
-
-                    if (gravityMovementCounter >= gravitySpeed)
-                    {
-                        // Basic falling movement
-                        CheckDetection(&detection);
-
-                        // Check if the piece has collided with another piece or with the boundings
-                        ResolveFallingMovement(&detection, &pieceActive);
-
-                        // Check if we fullfilled a line and if so, erase the line and pull down the the lines above
-                        CheckCompletion(&lineToDelete);
-
-                        gravityMovementCounter = 0;
-                    }
-
-                    // Move laterally at player's will
-                    if (lateralMovementCounter >= LATERAL_SPEED)
-                    {
-                        // Update the lateral movement and if success, reset the lateral counter
-                        if (!ResolveLateralMovement()) lateralMovementCounter = 0;
-                    }
-
-                    // Turn the piece at player's will
-                    if (turnMovementCounter >= TURNING_SPEED)
-                    {
-                        // Update the turning movement and reset the turning counter
-                        if (ResolveTurnMovement()) turnMovementCounter = 0;
-                    }
-                }
-
-                // Game over logic
-                for (int j = 0; j < 2; j++)
-                {
-                    for (int i = 1; i < GRID_HORIZONTAL_SIZE - 1; i++)
-                    {
-                        if (grid[i][j] == FULL)
-                        {
-                            gameOver = true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Animation when deleting lines
-                fadeLineCounter++;
-
-                if (fadeLineCounter%8 < 4) fadingColor = MAROON;
-                else fadingColor = GRAY;
-
-                if (fadeLineCounter >= FADING_TIME)
-                {
-                    int deletedLines = 0;
-                    deletedLines = DeleteCompleteLines();
-                    fadeLineCounter = 0;
-                    lineToDelete = false;
-
-                    lines += deletedLines;
-                }
-            }
-        }
-    }
-    else
+    if (gameOver)
     {
         if (IsKeyPressed(KEY_ENTER))
         {
             InitGame();
             gameOver = false;
         }
+        return;
     }
+
+    if (IsKeyPressed('P')) pause = !pause;
+
+    if (pause)
+    {
+        return;
+    }
+
+    if (lineToDelete)
+    {
+        // Animation when deleting lines
+        fadeLineCounter++;
+
+        if (fadeLineCounter%8 < 4) fadingColor = MAROON;
+        else fadingColor = GRAY;
+
+        if (fadeLineCounter >= FADING_TIME)
+        {
+            int deletedLines = 0;
+            deletedLines = DeleteCompleteLines();
+            fadeLineCounter = 0;
+            lineToDelete = false;
+
+            lines += deletedLines;
+        }
+
+        return;
+    }
+    
+    if (!pieceActive)
+    {
+        // Get another piece
+        pieceActive = Createpiece();
+
+        // We leave a little time before starting the fast falling down
+        fastFallMovementCounter = 0;
+    }
+    else    // Piece falling
+    {
+        // Counters update
+        fastFallMovementCounter++;
+        gravityMovementCounter++;
+        lateralMovementCounter++;
+        turnMovementCounter++;
+
+        // We make sure to move if we've pressed the key this frame
+        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) lateralMovementCounter = LATERAL_SPEED;
+        if (IsKeyPressed(KEY_UP)) turnMovementCounter = TURNING_SPEED;
+
+        // Fall down
+        if (IsKeyDown(KEY_DOWN) && (fastFallMovementCounter >= FAST_FALL_AWAIT_COUNTER))
+        {
+            // We make sure the piece is going to fall this frame
+            gravityMovementCounter += gravitySpeed;
+        }
+
+        if (gravityMovementCounter >= gravitySpeed)
+        {
+            // Basic falling movement
+            CheckDetection(&detection);
+
+            // Check if the piece has collided with another piece or with the boundings
+            ResolveFallingMovement(&detection, &pieceActive);
+
+            // Check if we fullfilled a line and if so, erase the line and pull down the the lines above
+            CheckCompletion(&lineToDelete);
+
+            gravityMovementCounter = 0;
+        }
+
+        // Move laterally at player's will
+        if (lateralMovementCounter >= LATERAL_SPEED)
+        {
+            // Update the lateral movement and if success, reset the lateral counter
+            if (!ResolveLateralMovement()) lateralMovementCounter = 0;
+        }
+
+        // Turn the piece at player's will
+        if (turnMovementCounter >= TURNING_SPEED)
+        {
+            // Update the turning movement and reset the turning counter
+            if (ResolveTurnMovement()) turnMovementCounter = 0;
+        }
+    }
+
+    // Game over logic
+    for (int j = 0; j < 2; j++)
+    {
+        for (int i = 1; i < GRID_HORIZONTAL_SIZE - 1; i++)
+        {
+            if (grid[i][j] == FULL)
+            {
+                gameOver = true;
+            }
+        }
+    }
+    
 }
 
 // Draw game (one frame)
